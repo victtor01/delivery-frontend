@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export default function ({ children }: LayoutProps) {
   return (
-    <div className="w-full min-h-screen overflow-auto flex flex-col">
+    <div className="w-full h-screen overflow-auto flex flex-col relative">
       <FixedComponentWhatsapp />
       <Header />
       <PublicNav />

@@ -1,11 +1,80 @@
-import Image from "next/image";
-import Link from "next/link";
+"use client";
+
+import { api } from "@/api";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
 import { FaArrowRight } from "react-icons/fa";
 import { IoLogoGoogle } from "react-icons/io5";
+import { z } from "zod";
+import Link from "next/link";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
+import { useAtom } from "jotai";
+import { userLogged } from "@/atoms/user-atom";
+
+const loginSchema = z.object({
+  email: z.string().min(1).email(),
+  password: z.string().min(1),
+});
+
+type LoginFormData = z.infer<typeof loginSchema>;
+
+const useLogin = () => {
+  // form state
+  const { register, handleSubmit } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  });
+
+  // atom for set user logged
+  const [_, setLogged] = useAtom(userLogged);
+
+  // router hook
+  const { push } = useRouter();
+
+  // function for create user
+  const createUser = async (body: LoginFormData) => {
+    // get response auth
+    const response = await api.post("/auth", {
+      ...body,
+    });
+
+    // verify access_token
+    const { access_token, refresh_token } = response.data || {
+      access_token: null,
+      refresh_token: null,
+    };
+
+    // test
+    if (!access_token || !refresh_token) {
+      throw new Error("Houve um erro ao tentar fazer o login!");
+    }
+
+    // set cookies
+    Cookies.set("access_token", access_token, {});
+    Cookies.set("refresh_token", refresh_token, {});
+
+    // set logged atom
+    setLogged(true);
+
+    // redirect
+    push("/");
+  };
+
+  return {
+    register,
+    handleSubmit,
+    createUser,
+  };
+};
 
 export default function Login() {
+  const { register, handleSubmit, createUser } = useLogin();
+
   return (
-    <form className="p-6 bg-white m-auto w-full max-w-[58rem] min-h-[32rem] flex gap-10 rounded z-20 shadow-xl">
+    <form
+      onSubmit={handleSubmit(createUser)}
+      className="p-6 bg-white m-auto w-full max-w-[58rem] min-h-[32rem] flex gap-10 rounded z-20 shadow-xl"
+    >
       <section className="flex flex-col gap-4 flex-1 items-center justify-center overflow-hidden relative">
         <h1 className="text-3xl text-center font-semibold text-gray-700 z-20">
           Bem vindo ao melhor site de{" "}
@@ -24,7 +93,7 @@ export default function Login() {
       </section>
 
       <span className="min-h-full flex bg-zinc-100 w-[1px]" />
-      <section className="flex-1 flex justify-center items-center flex-col gap-3">
+      <section className="flex-1 flex justify-center  flex-col gap-5">
         <div className="text-gray-500">
           <h1 className="text-2xl font-semibold text-gray-500">Login</h1>
         </div>
@@ -33,6 +102,7 @@ export default function Login() {
             <span className="font-semibold text-gray-500">Email *</span>
             <input
               type="text"
+              {...register("email")}
               className="w-full p-2 bg-zinc-50 outline-none border-2 border-transparent 
               focus:border-orange-500 rounded focus:shadow focus:shadow-orange-100"
               placeholder="example@gmail.com"
@@ -50,6 +120,7 @@ export default function Login() {
             </div>
             <input
               type="password"
+              {...register("password")}
               className="w-full p-2 bg-zinc-50 outline-none border-2 border-transparent 
               focus:border-orange-500 rounded focus:shadow focus:shadow-orange-100"
               placeholder="your password"

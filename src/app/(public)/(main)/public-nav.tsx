@@ -26,12 +26,12 @@ const Search = () => {
 
 const PublicNav = () => {
   return (
-    <nav className="w-full p-3 bg-white flex shadow-md shadow-blue-50 sticky">
+    <div className="w-full p-3 bg-white flex shadow-md shadow-blue-50 relative z-20">
       <div className="mx-auto max-w-main w-full flex justify-between items-center">
         <div className="flex gap-6">
           <Link
             className="font-semibold opacity-70 hover:opacity-100 
-          flex gap-2 items-center hover:text-cyan-500"
+          flex gap-2 items-center hover:text-orange-500"
             href="/"
           >
             <TbCategoryFilled />
@@ -39,7 +39,7 @@ const PublicNav = () => {
           </Link>
           <Link
             className="font-semibold opacity-70 hover:opacity-100 
-          flex gap-2 items-center hover:text-cyan-500"
+          flex gap-2 items-center hover:text-orange-500"
             href="/"
           >
             <FaBookmark />
@@ -50,7 +50,7 @@ const PublicNav = () => {
           <Search />
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
 
