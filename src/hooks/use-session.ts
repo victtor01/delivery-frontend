@@ -1,39 +1,57 @@
-"use client";
-
-import { useAtom } from "jotai";
-import { queryClient } from "./query-client";
-import Cookies from "js-cookie";
-import { userLogged } from "@/atoms/user-atom";
-import { useRouter } from "next/navigation";
+import { cookies } from "next/headers";
+import * as jose from "jose";
+import { User } from "@/entities/user";
 
 const useSession = () => {
-  const [_, setLogged] = useAtom(userLogged);
-  const { push } = useRouter();
-  const logout = () => {
-    // invalide queries
-    queryClient.invalidateQueries({ queryKey: ["todos"] });
-    // remove cookies
-    Cookies.remove("access_token");
-    Cookies.remove("refresh_token");
-    // set logged false
-    setLogged(false);
+  const openSessionToken = async (token: string) => {
+    const secret = new TextEncoder().encode(process.env.SECRET_KEY || "teste");
+    try {
+      const { payload } = await jose.jwtVerify(token, secret);
+      return payload;
+    } catch (error) {
+      return { exp: null } as unknown as jose.JWTPayload;
+    }
+  };
+  
 
-    push("/");
+  const isSessionValid = async () => {
+    const sessionCookie = cookies().get("refresh_token");
+
+    if (!sessionCookie) {
+      return false;
+    }
+
+    const { value } = sessionCookie;
+
+    const valide = await openSessionToken(value);
+
+    if (!valide) {
+      return false;
+    }
+
+    const exp = valide?.exp || " ";
+
+    const currentDate = new Date().getTime();
+
+    return (exp as number) * 1000 > currentDate;
   };
 
-  const getAuthorization = () => {
-    const access_token = Cookies.get("access_token");
-    const refresh_token = Cookies.get("refresh_token");
+  const getAuthorization = async () => {
+    // get cookie
+    const cookie = cookies().get("session");
+
+    //
+    const cookieJson = await openSessionToken(cookie?.value || "");
 
     return {
-      access_token,
-      refresh_token,
+      user: cookieJson,
     };
   };
 
   return {
-    logout,
     getAuthorization,
+    isSessionValid,
+    openSessionToken,
   };
 };
 

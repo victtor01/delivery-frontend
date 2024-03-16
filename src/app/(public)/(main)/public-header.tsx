@@ -1,20 +1,20 @@
-"use client";
-
-import { userLogged } from "@/atoms/user-atom";
 import { UserComponentIcon } from "@/components/user-component-icon";
-import { useAtom } from "jotai";
 import { MdOutlineLocalGroceryStore } from "react-icons/md";
+import { useSession } from "@/hooks/use-session";
 
-const useHeader = () => {
-  const [logged] = useAtom(userLogged);
+const useHeader = async () => {
+  const session = await useSession().getAuthorization();
+  const user = session.user || null;
 
   return {
-    logged,
+    user,
   };
 };
 
-const Header = () => {
-  const { logged } = useHeader();
+const Header = async () => {
+  const { user } = await useHeader();
+  console.log(user)
+
   return (
     <header className="w-full flex bg-white text-gray-600 border px-3 ">
       <div className="items-center flex mx-auto w-full max-w-main justify-between">
@@ -22,8 +22,7 @@ const Header = () => {
           <h1>Melhores lojas.</h1>
         </div>
         <div className="flex gap-4 items-center">
-          <UserComponentIcon logged={logged} />
-
+          <UserComponentIcon logged={!!user?.email} />
           <button className="p-4 bg-orange-500 opacity-90 hover:opacity-100 text-white">
             <MdOutlineLocalGroceryStore size="20" />
           </button>

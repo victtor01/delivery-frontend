@@ -1,4 +1,4 @@
-import { api } from "@/api";
+import { api } from "@/app/api";
 import Cookies from "js-cookie";
 
 interface UseApiPrivateProps {
@@ -19,50 +19,30 @@ const useApiPrivate = async (
   }
 
   try {
-    const access_token = Cookies.get("access_token") || null;
-
-    if (!access_token) throw new Error("Não foi encontrado passaporte");
-
+    // try request
     const { data } = await api({
       data: { ...body },
-      headers: {
-        Authorization: `Bearer ${access_token}`,
-      },
       method,
       url,
     });
 
+    // its OK
     return { data };
   } catch (error: any) {
     console.log(error);
 
     try {
-      const access_token = Cookies.get("access_token") || null;
-      const refresh_token = Cookies.get("refresh_token") || null;
-
-      if (!access_token || !refresh_token) {
-        throw new Error(`Erro ao tentar pegar o passaporte`);
-      }
-
+      // try refres token
       const response = await api({
         method: "post",
         url: "/auth/refresh",
-        data: {
-          access_token,
-          refresh_token,
-        },
       });
 
+      // get data
       const { data } = response;
-
-      Cookies.set("access_token", data.access_token);
-      Cookies.set("refresh_token", data.refresh_token);
 
       const { data: tryData } = await api({
         data: { ...body },
-        headers: {
-          Authorization: `Bearer ${data.access_token}`,
-        },
         method,
         url,
       });

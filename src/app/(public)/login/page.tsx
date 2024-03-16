@@ -1,6 +1,6 @@
 "use client";
 
-import { api } from "@/api";
+import { api } from "@/app/api";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { FaArrowRight } from "react-icons/fa";
@@ -49,15 +49,8 @@ const useLogin = () => {
       throw new Error("Houve um erro ao tentar fazer o login!");
     }
 
-    // set cookies
-    Cookies.set("access_token", access_token, {});
-    Cookies.set("refresh_token", refresh_token, {});
-
-    // set logged atom
-    setLogged(true);
-
     // redirect
-    push("/");
+    window.location.href = '/'
   };
 
   return {

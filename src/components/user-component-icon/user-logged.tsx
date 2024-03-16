@@ -1,13 +1,23 @@
-import { useSession } from "@/hooks/use-session";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { FaUserLarge } from "react-icons/fa6";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 const UserLogged = () => {
   const ref = useRef<HTMLDivElement>(null);
   const [show, setShow] = useState<boolean>(false);
-  const { logout } = useSession();
   const handleShow = () => setShow((prev) => !prev);
+
+  const router = useRouter();
+
+  const logout = () => {
+    fetch("/api/logout").then(async (res) => {
+      router.refresh()
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
