@@ -33,21 +33,17 @@ const useApiPrivate = async (
 
     try {
       // try refres token
-      const response = await api({
+      await api({
         method: "post",
         url: "/auth/refresh",
       });
 
-      // get data
-      const { data } = response;
-
-      const { data: tryData } = await api({
+      // try get data again
+      return await api({
         data: { ...body },
         method,
         url,
       });
-
-      return tryData;
     } catch (error) {
       console.log(error);
       throw new Error("Erro ao tentar novamente após atualizar o token");

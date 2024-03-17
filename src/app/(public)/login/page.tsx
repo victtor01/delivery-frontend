@@ -7,17 +7,18 @@ import { FaArrowRight } from "react-icons/fa";
 import { IoLogoGoogle } from "react-icons/io5";
 import { z } from "zod";
 import Link from "next/link";
-import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { userLogged } from "@/atoms/user-atom";
+import Cookies from "universal-cookie";
+import { createToken } from "./create-token";
+
+const cookies = new Cookies();
 
 const loginSchema = z.object({
   email: z.string().min(1).email(),
   password: z.string().min(1),
 });
 
-type LoginFormData = z.infer<typeof loginSchema>;
+export type LoginFormData = z.infer<typeof loginSchema>;
 
 const useLogin = () => {
   // form state
@@ -25,23 +26,21 @@ const useLogin = () => {
     resolver: zodResolver(loginSchema),
   });
 
-  // atom for set user logged
-  const [_, setLogged] = useAtom(userLogged);
-
   // router hook
-  const { push } = useRouter();
+  const router = useRouter();
 
   // function for create user
-  const createUser = async (body: LoginFormData) => {
+  const loginUser = async (body: LoginFormData) => {
     // get response auth
     const response = await api.post("/auth", {
       ...body,
     });
 
     // verify access_token
-    const { access_token, refresh_token } = response.data || {
+    const { access_token, refresh_token, user } = response.data || {
       access_token: null,
       refresh_token: null,
+      user: {},
     };
 
     // test
@@ -49,23 +48,31 @@ const useLogin = () => {
       throw new Error("Houve um erro ao tentar fazer o login!");
     }
 
-    // redirect
-    window.location.href = '/'
+    // create token
+    const tokenUser = await createToken({ payload: user });
+
+    // set cookie session
+    cookies.set("session", tokenUser);
+
+    // refresh on page
+    router.refresh();
+    // update url
+    router.replace("/");
   };
 
   return {
     register,
     handleSubmit,
-    createUser,
+    loginUser,
   };
 };
 
 export default function Login() {
-  const { register, handleSubmit, createUser } = useLogin();
+  const { register, handleSubmit, loginUser } = useLogin();
 
   return (
     <form
-      onSubmit={handleSubmit(createUser)}
+      onSubmit={handleSubmit(loginUser)}
       className="p-6 bg-white m-auto w-full max-w-[58rem] min-h-[32rem] flex gap-10 rounded z-20 shadow-xl"
     >
       <section className="flex flex-col gap-4 flex-1 items-center justify-center overflow-hidden relative">

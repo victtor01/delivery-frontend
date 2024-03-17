@@ -8,6 +8,6 @@ export function GET(req: NextRequest) {
   cookies().delete("session");
 
   return NextResponse.json({
-    error: false
-  })
+    error: false,
+  });
 }

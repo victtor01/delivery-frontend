@@ -1,10 +1,10 @@
 import { cookies } from "next/headers";
 import * as jose from "jose";
-import { User } from "@/entities/user";
 
 const useSession = () => {
   const openSessionToken = async (token: string) => {
-    const secret = new TextEncoder().encode(process.env.SECRET_KEY || "teste");
+    const secret = new TextEncoder().encode(process.env.SECRET_KEY);
+
     try {
       const { payload } = await jose.jwtVerify(token, secret);
       return payload;
@@ -12,10 +12,9 @@ const useSession = () => {
       return { exp: null } as unknown as jose.JWTPayload;
     }
   };
-  
 
   const isSessionValid = async () => {
-    const sessionCookie = cookies().get("refresh_token");
+    const sessionCookie = cookies().get("session");
 
     if (!sessionCookie) {
       return false;
@@ -25,7 +24,9 @@ const useSession = () => {
 
     const valide = await openSessionToken(value);
 
-    if (!valide) {
+    console.log(valide)
+
+    if (!valide?.email) {
       return false;
     }
 
